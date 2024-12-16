@@ -109,7 +109,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     return res.status(400).json({ error: 'Date format should be in YYYY-MM-DD format' });
   }
   if (!dateValidation(exerciseDate)) {
-    return res.status(400).json({ error: '' });
+    return res.status(400).json({ error: 'Please enter valid date!' });
   }
 
   // Fetch the user from the database
