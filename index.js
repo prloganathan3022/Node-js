@@ -162,61 +162,77 @@ app.get('/api/users/:_id/logs', (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    let query = 'SELECT * FROM exercises WHERE userId = ?';
+    // Query to calculate the total count
+    let countQuery = 'SELECT COUNT(*) AS exerciseCount FROM exercises WHERE userId = ?';
+    let logQuery = 'SELECT * FROM exercises WHERE userId = ?';
     const params = [userId];
 
     if (from) {
       if (dateValidation(from) && dateFormatValidation(from)) {
-        query += ' AND date >= ?';
+        countQuery += ' AND date >= ?';
+        logQuery += ' AND date >= ?';
         params.push(from);
       } else {
-        return res.status(400).json({ error: 'Invalid from date. Please enter YYYY-MM-DD date format.' })
+        return res.status(400).json({ error: 'Invalid from date. Please enter YYYY-MM-DD date format.' });
       }
     }
 
     if (to) {
       if (dateValidation(to) && dateFormatValidation(to)) {
-        query += ' AND date <= ?';
+        countQuery += ' AND date <= ?';
+        logQuery += ' AND date <= ?';
         params.push(to);
       } else {
-        return res.status(400).json({ error: 'Invalid to date. Please enter YYYY-MM-DD date format.' })
+        return res.status(400).json({ error: 'Invalid to date. Please enter YYYY-MM-DD date format.' });
       }
     }
 
-    query += ' ORDER BY date';
-
+    // Add sorting and limit to the log query
+    logQuery += ' ORDER BY date';
     if (limit) {
       if (!isNaN(parseInt(limit))) {
-        query += ' LIMIT ?';
+        logQuery += ' LIMIT ?';
         params.push(parseInt(limit));
       } else {
-        return res.status(400).json({ error: 'Invalid limit!' })
+        return res.status(400).json({ error: 'Invalid limit!' });
       }
     }
 
-    db.all(query, params, (err, exercises) => {
+    // Execute the count query
+    db.get(countQuery, params.slice(0, params.length - 1), (err, countResult) => {
       if (err) {
         return res.status(500).json({ error: 'Database error' });
       }
 
-      const log = exercises.map(ex => ({
-        id: ex.id,
-        description: ex.description,
-        duration: ex.duration,
-        date: ex.date
-      }));
+      const totalCount = countResult.exerciseCount;
 
-      const response = {
-        id: user.id,
-        username: user.username,
-        count: exercises.length,
-        log: log
-      };
+      // Execute the log query
+      db.all(logQuery, params, (err, exercises) => {
+        if (err) {
+          return res.status(500).json({ error: 'Database error' });
+        }
 
-      res.status(200).json(response);
+        const log = exercises.map(ex => ({
+          id: ex.id,
+          description: ex.description,
+          duration: ex.duration,
+          date: ex.date,
+        }));
+
+        // Construct the final response
+        const response = {
+          id: user.id,
+          username: user.username,
+          count: totalCount,
+          log: log,
+        };
+
+        res.status(200).json(response);
+      });
     });
   });
 });
+
 
 // Error handling for unsupported routes
 app.use((req, res) => {
