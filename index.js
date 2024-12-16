@@ -91,7 +91,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const userId = parseInt(req.params._id);
 
   // Log the userId for debugging
-  console.log('User ID:', userId); 
+  console.log('User ID:', userId);
 
   const { description, duration, date } = req.body;
 
@@ -106,10 +106,10 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 
   let exerciseDate = date ? date : new Date().toISOString().split('T')[0];
   if (!dateFormatValidation(exerciseDate)) {
-    return res.status(400).json({ error: 'Date format should be in YYYY-MM-DD format'});
+    return res.status(400).json({ error: 'Date format should be in YYYY-MM-DD format' });
   }
-  if(!dateValidation(exerciseDate)){
-    return res.status(400).json({ error: ''});
+  if (!dateValidation(exerciseDate)) {
+    return res.status(400).json({ error: '' });
   }
 
   // Fetch the user from the database
@@ -170,27 +170,27 @@ app.get('/api/users/:_id/logs', (req, res) => {
         query += ' AND date >= ?';
         params.push(from);
       } else {
-        return res.status(400).json({ error: 'Invalid from date. Please enter YYYY-MM-DD date format.'})
+        return res.status(400).json({ error: 'Invalid from date. Please enter YYYY-MM-DD date format.' })
       }
     }
 
-    if(to) {
+    if (to) {
       if (dateValidation(to) && dateFormatValidation(to)) {
         query += ' AND date <= ?';
         params.push(to);
       } else {
-        return res.status(400).json({ error: 'Invalid to date. Please enter YYYY-MM-DD date format.'})
+        return res.status(400).json({ error: 'Invalid to date. Please enter YYYY-MM-DD date format.' })
       }
     }
 
-    query += ' ORDER BY date DESC';
+    query += ' ORDER BY date';
 
-    if(limit) {
+    if (limit) {
       if (!isNaN(parseInt(limit))) {
         query += ' LIMIT ?';
         params.push(parseInt(limit));
       } else {
-        return res.status(400).json({ error: 'Invalid limit!'})
+        return res.status(400).json({ error: 'Invalid limit!' })
       }
     }
 
@@ -237,7 +237,7 @@ function dateValidation(date) {
     return true;
   }
 }
- 
+
 function dateFormatValidation(date) {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (date && !dateRegex.test(date)) {
